@@ -7,21 +7,34 @@ from argparse import ArgumentParser
 # generate raw frames and gt json files from video dataset 
 parser = ArgumentParser()
 
-parser.add_argument('--root', default="/data/data4/zengwenzheng/data/dataset_building/mpeblink_cvpr2023/", help='Path to dataset root')
+parser.add_argument('--root', default="/Users/carlamiquelblasco/Desktop/MASTER\ BERGEN/Q1/NONMANUAL/MPEblink/Data", help='Path to dataset root')
 args = parser.parse_args()
 
 print(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
 
 video_dataset_root = args.root
 
-split_dirs = ['validate', 'train','test']
+if not os.path.exists(video_dataset_root):
+        raise Exception("The root directory is nos well-defined")
+
+split_dirs = ['val', 'train','test']
 for split_dir in split_dirs:
     
     split_dataset_root = os.path.join(video_dataset_root, split_dir)
-    if not os.path.exists(split_dataset_root):
+    if not os.path.exists(split_dataset_root) and split_dir=='val':
+        print("The root directory for validation dataset is not well-defined")
+        continue
+    if not os.path.exists(split_dataset_root) and split_dir=='train':
+        print("The root directory for training dataset is not well-defined")
+        continue
+    if not os.path.exists(split_dataset_root) and split_dir=='test':
+        print("The root directory for testing dataset is not well-defined")
         continue
     rawframes_dataset_root = os.path.join(video_dataset_root, f'{split_dir}_rawframes')
     video_list = os.listdir(split_dataset_root)
+    #print(video_list) --> there is a '.DS_Store' file that I have to figure out where it comes from. There should only be integer name files as there is inside each Data/split_dirs
+#RUN >>python tools/dataset_converters/mpeblink_build_raw_frames_dataset.py --root Data
+#OUTPUT ERROR >>ValueError: invalid literal for int() with base 10: '.DS_Store'
     video_list = list(map(int, video_list))
     video_list.sort()
     dataset = {}
