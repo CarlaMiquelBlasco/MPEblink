@@ -229,5 +229,6 @@ def main(args):
 
 if __name__ == '__main__':
     args = parse_args()
+    print(os.path.exists('pretrained_models/instblink_r50.pth'))
     print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
     main(args)

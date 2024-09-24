@@ -6,6 +6,11 @@ from tqdm import tqdm
 source_root = 'demo_video'
 source_video_root = os.path.join(source_root, 'source_video')
 source_video_name_list = os.listdir('demo_video/source_video')
+
+# Filter out non-video files like .DS_Store (this assumes that the videos have extensions like .mp4, .avi, etc.)
+valid_extensions = ('.mp4', '.avi', '.mov', '.mkv')
+source_video_name_list = [f for f in source_video_name_list if f.endswith(valid_extensions)]
+
 inter_path = os.path.join(source_root, 'intermediate_results')
 os.makedirs(inter_path, exist_ok=True)
 
@@ -16,6 +21,7 @@ info['videos'] = []
 for source_video_name in tqdm(source_video_name_list):
 
     source_video_path = os.path.join(source_video_root, source_video_name)
+    print("source video path: ", source_video_path)
 
     capture = cv2.VideoCapture(source_video_path)
     img_dir = os.path.join(inter_path, source_video_name.split('.')[0])
@@ -41,4 +47,5 @@ for source_video_name in tqdm(source_video_name_list):
     cur_video = {'file_names': file_names, 'id': source_video_name.split('.')[0], 'height': cur_height, 'width': cur_width}
     info['videos'].append(cur_video)
 json_path = os.path.join(inter_path, 'info.json')
+print("json_path: ", json_path)
 json.dump(info, open(json_path, 'w'))

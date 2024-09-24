@@ -35,6 +35,7 @@ for split_dir in split_dirs:
     #print(video_list) --> there is a '.DS_Store' file that I have to figure out where it comes from. There should only be integer name files as there is inside each Data/split_dirs
 #RUN >>python tools/dataset_converters/mpeblink_build_raw_frames_dataset.py --root Data
 #OUTPUT ERROR >>ValueError: invalid literal for int() with base 10: '.DS_Store'
+    video_list = [v for v in video_list if v.isdigit()] # Added this line to filter all the files that are not integers. Specifically, to filter .DS_Store
     video_list = list(map(int, video_list))
     video_list.sort()
     dataset = {}
@@ -52,7 +53,7 @@ for split_dir in split_dirs:
     for video_sample in tqdm(video_list):
 
         video_path = os.path.join(split_dataset_root, str(video_sample), 'video.mp4')
-        anno_path = os.path.join(split_dataset_root, str(video_sample), 'annote.json')
+        anno_path = os.path.join(split_dataset_root, str(video_sample), 'annotation.json')
         origin_anno = json.load(open(anno_path, 'r'))
 
         height = origin_anno.pop('height')
