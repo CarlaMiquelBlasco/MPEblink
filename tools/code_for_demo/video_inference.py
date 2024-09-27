@@ -2,7 +2,6 @@ import json
 import os
 from argparse import ArgumentParser
 from threading import Thread
-import numpy as np
 import torch
 from mmcv import DictAction
 from mmcv.parallel import collate, scatter
@@ -19,7 +18,7 @@ import numpy as np
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument('--config', default='configs/instblink/instblink_r50.py', help='Config file')
-    parser.add_argument('--checkpoint',default='pretrained_models/instblink_r50.pth', help='Checkpoint file')
+    #parser.add_argument('--checkpoint',default='pretrained_models/instblink_r50.pth', help='Checkpoint file')
     parser.add_argument(
         '--json',
         default="demo_video/intermediate_results/info.json",
@@ -27,7 +26,7 @@ def parse_args():
     parser.add_argument(
         '--root', default="demo_video/intermediate_results", help='Path to image file') 
     parser.add_argument(
-        '--device', default='cuda:0', help='Device used for inference')
+        '--device', default='cpu', help='Device used for inference') #modified defauls=cuda:0 to default=cpu
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -49,15 +48,21 @@ def compute_iou(assigner, previous, cur):
     return iou
 
 def main(args):
+    print("checkkkk1")
     model = init_detector(
         args.config,
-        args.checkpoint,
+        #args.checkpoint,
         device=args.device,
         cfg_options=args.cfg_options) # build_detector
+    print("checkkkk2")
     model = add_flops_counting_methods(model)
+    print("checkkkk3")
     cfg = model.cfg
+    print("checkkkk4")
     anno = json.load(open(args.json))
+    print("checkkkk5")
     test_pipeline = Compose(cfg.data.test.pipeline)
+    print("checkkkk6")
 
     results = []
     clip_len = 36   # define the video clip length for a single forward propagation
@@ -106,7 +111,7 @@ def main(args):
             datas = collate(datas, samples_per_gpu=len(cur_clip)) # form the input batch
             datas['img_metas'] = datas['img_metas'].data
             datas['img'] = datas['img'].data
-            datas = scatter(datas, [args.device])[0]
+            #datas = scatter(datas, [args.device])[0] --> NO NEED TO DISTRIBUTE DATA ACROSS DIFFERENT DEVICES BC CPU
             with torch.no_grad():
                 model.start_flops_count()
                 (det_bboxes, det_labels), det_blinks = model(
@@ -229,6 +234,6 @@ def main(args):
 
 if __name__ == '__main__':
     args = parse_args()
-    print(os.path.exists('pretrained_models/instblink_r50.pth'))
+    print(torch.cuda.is_available())
     print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
     main(args)

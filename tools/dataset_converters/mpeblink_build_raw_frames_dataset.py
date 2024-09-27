@@ -4,6 +4,8 @@ import cv2
 import json
 from tqdm import tqdm
 from argparse import ArgumentParser
+import shutil
+
 # generate raw frames and gt json files from video dataset 
 parser = ArgumentParser()
 
@@ -17,7 +19,7 @@ video_dataset_root = args.root
 if not os.path.exists(video_dataset_root):
         raise Exception("The root directory is nos well-defined")
 
-split_dirs = ['val', 'train','test']
+split_dirs = ['train'] #['val', 'train','test']
 for split_dir in split_dirs:
     
     split_dataset_root = os.path.join(video_dataset_root, split_dir)
@@ -32,6 +34,14 @@ for split_dir in split_dirs:
         continue
     rawframes_dataset_root = os.path.join(video_dataset_root, f'{split_dir}_rawframes')
     video_list = os.listdir(split_dataset_root)
+
+    # Cleanup previous outputs
+    if os.path.exists(rawframes_dataset_root):
+        print(f"Removing existing directory: {rawframes_dataset_root}")
+        shutil.rmtree(rawframes_dataset_root)  # Remove the entire directory and its contents
+    os.makedirs(rawframes_dataset_root, exist_ok=True)  # Create the new directory
+
+
     #print(video_list) --> there is a '.DS_Store' file that I have to figure out where it comes from. There should only be integer name files as there is inside each Data/split_dirs
 #RUN >>python tools/dataset_converters/mpeblink_build_raw_frames_dataset.py --root Data
 #OUTPUT ERROR >>ValueError: invalid literal for int() with base 10: '.DS_Store'
@@ -50,7 +60,7 @@ for split_dir in split_dirs:
     
     target_width = 640
     target_height = 360
-    for video_sample in tqdm(video_list):
+    for video_sample in tqdm(video_list): #range(1,20):
 
         video_path = os.path.join(split_dataset_root, str(video_sample), 'video.mp4')
         anno_path = os.path.join(split_dataset_root, str(video_sample), 'annotation.json')
@@ -71,7 +81,7 @@ for split_dir in split_dirs:
         img_index = 0
         while True:
             res, image = camera.read()
-            if not res: 
+            if not res:
                 break
             relative_img_path = str(video_sample)+'/'+ str(img_index).rjust(5,'0') + '.png'
             image = cv2.resize(image, (target_width, target_height))
@@ -90,7 +100,7 @@ for split_dir in split_dirs:
             # resize the gt annotation according to the shape of resized frames (640*360 in our experiment)
             for index in range(0,length):
                 if origin_anno[person]['bbox'][index] == None:
-                    anno_blink.append(None) 
+                    anno_blink.append(None)
                     continue
                 else:
                     origin_anno[person]['bbox'][index][0] = origin_anno[person]['bbox'][index][0] * scale_w
@@ -114,7 +124,7 @@ for split_dir in split_dirs:
             anno.update({'id': anno_id})
 
             anno_id += 1
-            
+
             annotations.append(anno)
 
     dataset.update(info)
